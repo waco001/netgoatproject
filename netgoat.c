@@ -9,7 +9,7 @@
 #include <string.h>
 #include <malloc.h>
 
-
+//hellooooo
 int straycat(int argc, char *argv[]);  //prototype function for file 1
 int flags(int argc, char *argv[]);
 int stealth();
