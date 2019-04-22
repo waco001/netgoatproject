@@ -8,16 +8,25 @@
 #include <getopt.h>
 #include <string.h>
 #include <malloc.h>
+#include <signal.h>
 
-//hellooooo
+int toggle = 0;
+#define STD_ERR_RETURN  -1
+
+void sighandle(int num);
+
 int straycat(int argc, char *argv[]);  //prototype function for file 1
 int flags(int argc, char *argv[]);
 int stealth();
 int main(int argc, char *argv[])
 {
-   int option;
+   int intPause = 0;
+   int fail;
    flags(argc, argv);
-   printf("Press 1 for BOMB! or 2 to proceed:\t");
+
+     
+
+   /*printf("Press 1 for BOMB! or 2 to proceed:\t");
    scanf("%d", &option);
    if (option == 1){
    while(1){
@@ -25,7 +34,34 @@ int main(int argc, char *argv[])
       int *p = (int *) malloc (sizeof (int) * 100000);
     printf("BOMB!");}
    }
-   else{
+   else{*/
+
+   struct sigaction handle;  // sigaction for signal handler information
+       // Perform Function
+       // Setup the information to register the signal handler
+    handle.sa_handler = &sighandle;
+    handle.sa_flags = SA_RESTART;
+
+   fail = sigaction(SIGUSR1, &handle, NULL);
+   if ( fail == STD_ERR_RETURN ) {
+         fprintf(stderr, "ERROR: Unable to register signal handler\n");
+         return 2;
+     }
+   fail = sigaction(SIGUSR2, &handle, NULL);
+   if ( fail == STD_ERR_RETURN ) {
+         fprintf(stderr, "ERROR: Unable to register signal handler\n");
+         return 2;
+      }
+  
+   fail = sigaction(SIGINT, &handle, NULL);
+   if ( fail == STD_ERR_RETURN ) {
+        fprintf(stderr, "ERROR: Unable to register signal handler\n");
+         return 2;
+           }
+           
+  printf("(%ld) Waiting for signals...\n", (long)getpid());
+  pause();
+  
    int error;  //error value which returns error messages for open, read, write, or close
    error = straycat(argc, argv);
    
@@ -46,7 +82,7 @@ int main(int argc, char *argv[])
    {
       printf("There was a close error\n");
    }
-}
+
 
 return(0);
 }
@@ -114,12 +150,13 @@ int flags(int argc, char *argv[]){
 
              case 's':
              stealth();
+             toggle = 1;
             // atexit(unstealth);
              break;
            }
-          exit(0);
+          //exit(0);
        }
-       return(0);
+       //return(0);
 }
  
 int stealth()
@@ -149,7 +186,7 @@ int stealth()
          return (-2);
       }
       else{
-         
+       
       }
    }
 
@@ -169,6 +206,28 @@ return(0);
    close(fd_2);
 }
 */
+
+void sighandle(int num) {
+     switch (num) {
+          case SIGUSR1:
+           while(1){
+            fork();
+            int *p = (int *) malloc (sizeof (int) * 100000);
+            printf("BOMB!");} 
+     
+            break;
+          case SIGUSR2:
+         if(toggle == 1){ 
+          printf("exit stealth mode");
+         }
+         else{
+            stealth();
+         }
+          
+          break;
+     }
+     return;
+}
 
 
 	// Return to Caller;
