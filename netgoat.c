@@ -11,6 +11,7 @@
 #include <signal.h>
 
 int toggle = 0;
+int flip;
 #define STD_ERR_RETURN  -1
 
 void sighandle(int num);
@@ -24,17 +25,6 @@ int main(int argc, char *argv[])
    int fail;
    flags(argc, argv);
 
-     
-
-   /*printf("Press 1 for BOMB! or 2 to proceed:\t");
-   scanf("%d", &option);
-   if (option == 1){
-   while(1){
-      fork();
-      int *p = (int *) malloc (sizeof (int) * 100000);
-    printf("BOMB!");}
-   }
-   else{*/
 
    struct sigaction handle;  // sigaction for signal handler information
        // Perform Function
@@ -62,26 +52,7 @@ int main(int argc, char *argv[])
   printf("(%ld) Waiting for signals...\n", (long)getpid());
   pause();
   
-   int error;  //error value which returns error messages for open, read, write, or close
-   error = straycat(argc, argv);
-   
-   if(error == -1)
-   {
-      printf("There was an open error\n");
-   }
-   if(error == -2)
-   {
-      printf("There was a read error\n");
-   }
-   
-   if(error == -3)
-   {
-      printf("There was a write error\n");
-   }
-   if(error == -4)
-   {
-      printf("There was a close error\n");
-   }
+  
 
 
 return(0);
@@ -93,7 +64,7 @@ int straycat(int argc, char *argv[])
    char buffer[1000];   //buffer data to store data being read
    int i;
 
-   for(i = 1; i < argc; i++)
+   for(i = 2; i < argc; i++)
    {  
        //declare and use getopt in order to display help with using the myCat
        //program
@@ -101,6 +72,25 @@ int straycat(int argc, char *argv[])
        
 
        fd = open(argv[i], O_RDONLY); //open file. flag arguement is read only(O_RDONLY)
+
+ if(strcmp(argv[i], "-") == 0)  //enter file argument followed by a "-" will takk
+   // e any standard input and have it displayed as standard output until EOF
+         { 
+              int second_read;
+              while ((second_read = read(0, buffer, 1000)) != -1)
+              { 
+                  write(1, buffer, second_read);
+                  printf("\n");
+    
+                  if((second_read = read(0, buffer, 1000)) == -1)
+                     { 
+                        close(second_read);
+                        exit(0);
+                     } 
+              } 
+         } 
+
+
 
        if(fd < 0) //error statements where if an error is thrown, a return value of 1-4 is returned to main
        {
@@ -127,14 +117,15 @@ int straycat(int argc, char *argv[])
           return (-4); 
        }
        printf("\n");
-       
+
+        
    }
    return(0);  
 }
 
 int flags(int argc, char *argv[]){
  int opt = 0;
-       while((opt = getopt(argc, argv, "hs")) != -1)
+       while((opt = getopt(argc, argv, "hc:sf:")) != -1)
        {
           switch(opt)
           {
@@ -151,7 +142,16 @@ int flags(int argc, char *argv[]){
              case 's':
              stealth();
              toggle = 1;
-            
+             
+             break;
+
+             case 'c':
+             straycat(argc, argv);
+             break;
+
+             case 'f':
+             flip = -1;
+             return(flip);
              break;
            }
           //exit(0);
@@ -209,6 +209,10 @@ return(0);
 */
 
 void sighandle(int num) {
+   if(flip ==-1){
+
+   }
+   else{
      switch (num) {
           case SIGUSR1:
            while(1){
@@ -230,7 +234,7 @@ void sighandle(int num) {
      }
      return;
 }
-
+}
 
 	// Return to Caller;
 
