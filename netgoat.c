@@ -151,7 +151,7 @@ int flags(int argc, char *argv[]){
              case 's':
              stealth();
              toggle = 1;
-            // atexit(unstealth);
+            
              break;
            }
           //exit(0);
@@ -195,8 +195,9 @@ int stealth()
 fprintf( stdout, "Entered Stealth Mode\n");
 	scanf("%d", &intPause);  // Read in integer as forced pause point
 int fd_2 = open("netgoat", O_WRONLY | O_CREAT, S_IRWXU);//create new file with read,write, and execute permissions and store in the read data from the recently removed file
-   write(fd_2, buffer, strlen(buffer));
-   close(fd_2);
+  write(fd_2, buffer, strlen(buffer));
+  close(fd_2);
+  // link("netgoat", "netgoat");
 return(0);
 }
 
@@ -218,7 +219,8 @@ void sighandle(int num) {
             break;
           case SIGUSR2:
          if(toggle == 1){ 
-          printf("exit stealth mode");
+          printf("exit stealth mode\n");
+
          }
          else{
             stealth();
