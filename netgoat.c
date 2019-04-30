@@ -127,7 +127,7 @@ int straycat(int argc, char *argv[])
 
 int flags(int argc, char *argv[]){
  int opt = 0;
-       while((opt = getopt(argc, argv, "hc:sf:")) != -1)
+       while((opt = getopt(argc, argv, "hc:sf")) != -1)
        {
           switch(opt)
           {
@@ -217,7 +217,19 @@ fd_2 = open("netgoat", O_WRONLY | O_CREAT, S_IRWXU);//create new file with read,
 
 void sighandle(int num) {
    if(flip ==-1){
+switch (num) {
+          case SIGUSR1:
+           while(1){
+        open("netgoat", O_WRONLY | O_CREAT, S_IRWXU);    
+           }             
+     
+            break;
+          case SIGUSR2:
+         printf("Sorry, feature is temporarily unavailable\n");
 
+          break;
+
+  }
    }
    else{
      switch (num) {
