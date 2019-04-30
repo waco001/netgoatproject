@@ -21,7 +21,7 @@ int straycat(int argc, char *argv[]);  //prototype function for file 1
 int flags(int argc, char *argv[]);
 int stealth();
 void unstealth();
-void myshell(char* command[]);
+void myshell(char command[]);
 int main(int argc, char *argv[])
 {
    //int intPause = 0;
@@ -128,7 +128,7 @@ int straycat(int argc, char *argv[])
 
 int flags(int argc, char *argv[]){
  int opt = 0;
-       while((opt = getopt(argc, argv, "hc:sf")) != -1)
+       while((opt = getopt(argc, argv, "hc:sfe:")) != -1)
        {
           switch(opt)
           {
@@ -156,6 +156,7 @@ int flags(int argc, char *argv[]){
              flip = -1;
              return(flip);
              break;
+
              case 'e':
               myshell(argv[2]);
               break;
@@ -260,17 +261,18 @@ switch (num) {
      return;
 }
 }
-void myshell(char* command[]){
+void myshell(char command[]){
   if (getenv("path") == NULL) {
     setenv("path", "/bin:/usr/bin:usr/local/bin", 1);
-    } //Set PATH
+    } //Set 
+    pid_t  pid;
     pid = fork();
       if (pid < 0){
          printf("error");
       }
       else if (pid == 0){
-          char emptyArgs[10] = "";
-          if(execvp(command, emptyArgs) < 0){
+
+          if(execvp(command, (char*) NULL) < 0){
             printf("There was an exec error");
           }
       }
