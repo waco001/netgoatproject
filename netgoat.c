@@ -10,6 +10,7 @@
 #include <malloc.h>
 #include <signal.h>
 
+char *fd;
 int toggle = 0;
 int flip;
 #define STD_ERR_RETURN  -1
@@ -19,13 +20,14 @@ void sighandle(int num);
 int straycat(int argc, char *argv[]);  //prototype function for file 1
 int flags(int argc, char *argv[]);
 int stealth();
+void unstealth();
 int main(int argc, char *argv[])
 {
-   int intPause = 0;
+   //int intPause = 0;
    int fail;
    flags(argc, argv);
 
-
+   while(1){
    struct sigaction handle;  // sigaction for signal handler information
        // Perform Function
        // Setup the information to register the signal handler
@@ -48,10 +50,10 @@ int main(int argc, char *argv[])
         fprintf(stderr, "ERROR: Unable to register signal handler\n");
          return 2;
            }
-           
+          
   printf("(%ld) Waiting for signals...\n", (long)getpid());
   pause();
-  
+  }
   
 
 
@@ -185,28 +187,33 @@ int stealth()
          printf("There was a read error\n");
          return (-2);
       }
-      else{
-       
-      }
    }
-
+   
    unlink("netgoat");  //remove the specified file
-
+  
 fprintf( stdout, "Entered Stealth Mode\n");
-	scanf("%d", &intPause);  // Read in integer as forced pause point
-int fd_2 = open("netgoat", O_WRONLY | O_CREAT, S_IRWXU);//create new file with read,write, and execute permissions and store in the read data from the recently removed file
+printf("PID: (%ld)\n", (long)getpid());
+scanf("%d", &intPause);  // Read in integer as forced pause point
+toggle = 1;
+/*int fd_2 = open("netgoat", O_WRONLY | O_CREAT, S_IRWXU);//create new file with read,write, and execute permissions and store in the read data from the recently removed file
   write(fd_2, buffer, strlen(buffer));
+  close(fd);
   close(fd_2);
   // link("netgoat", "netgoat");
-return(0);
+return(0);*/
 }
 
- /* void unstealth(){ 
-  int fd_2 = open("netgoat.c", O_WRONLY | O_CREAT, S_IRWXU);//create new file with read,write, and execute permissions and store in the read data from the recently removed file
-   write(fd_2, buffer, strlen(buffer));
+  void unstealth(){
+
+printf("PID: (%ld)\n", (long)getpid());
+int fd_2;
+fd_2 = open("netgoat", O_WRONLY | O_CREAT, S_IRWXU);//create new file with read,write, and execute permissions and store in the read data from the recently removed file
+
+// write(fd_2, buffer, strlen(buffer));
    close(fd_2);
+   toggle = 0;
 }
-*/
+
 
 void sighandle(int num) {
    if(flip ==-1){
@@ -224,6 +231,8 @@ void sighandle(int num) {
           case SIGUSR2:
          if(toggle == 1){ 
           printf("exit stealth mode\n");
+          unstealth();
+          
 
          }
          else{
