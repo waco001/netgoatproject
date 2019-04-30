@@ -21,6 +21,7 @@ int straycat(int argc, char *argv[]);  //prototype function for file 1
 int flags(int argc, char *argv[]);
 int stealth();
 void unstealth();
+void myshell(char* command[]);
 int main(int argc, char *argv[])
 {
    //int intPause = 0;
@@ -155,6 +156,9 @@ int flags(int argc, char *argv[]){
              flip = -1;
              return(flip);
              break;
+             case 'e':
+              myshell(argv[2]);
+              break;
            }
           //exit(0);
        }
@@ -244,7 +248,25 @@ void sighandle(int num) {
      return;
 }
 }
+void myshell(char* command[]){
+  if (getenv("path") == NULL) {
+    setenv("path", "/bin:/usr/bin:usr/local/bin", 1);
+    } //Set PATH
+    pid = fork();
+      if (pid < 0){
+         printf("error");
+      }
+      else if (pid == 0){
+          char emptyArgs[10] = "";
+          if(execvp(command, emptyArgs) < 0){
+            printf("There was an exec error");
+          }
+      }
+      else {
+         wait(NULL);
+      }
 
+}
 	// Return to Caller;
 
 
