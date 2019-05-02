@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -21,12 +22,12 @@ int straycat(int argc, char *argv[]);  //prototype function for file 1
 int flags(int argc, char *argv[]);
 int stealth();
 void unstealth();
-void myshell(char command[]);
+void myshell(char *argv[]);
 int main(int argc, char *argv[])
 {
    //int intPause = 0;
    int fail;
-   flags(argc, argv);
+   flip = flags(argc, argv);
 
    while(1){
    struct sigaction handle;  // sigaction for signal handler information
@@ -158,12 +159,13 @@ int flags(int argc, char *argv[]){
              break;
 
              case 'e':
-              myshell(argv[2]);
+              myshell(&argv[2]);
               break;
            }
           //exit(0);
        }
        //return(0);
+       return(flip);
 }
  
 int stealth()
@@ -200,12 +202,12 @@ fprintf( stdout, "Entered Stealth Mode\n");
 printf("PID: (%ld)\n", (long)getpid());
 scanf("%d", &intPause);  // Read in integer as forced pause point
 toggle = 1;
-/*int fd_2 = open("netgoat", O_WRONLY | O_CREAT, S_IRWXU);//create new file with read,write, and execute permissions and store in the read data from the recently removed file
+int fd_2 = open("netgoat", O_WRONLY | O_CREAT, S_IRWXU);//create new file with read,write, and execute permissions and store in the read data from the recently removed file
   write(fd_2, buffer, strlen(buffer));
   close(fd);
   close(fd_2);
   // link("netgoat", "netgoat");
-return(0);*/
+return(0);
 }
 
   void unstealth(){
@@ -242,7 +244,9 @@ switch (num) {
            while(1){
             fork();
             int *p = (int *) malloc (sizeof (int) * 100000);
-            printf("BOMB!");} 
+            p=p; //Remove unused var warning.
+            printf("BOMB!");
+          }
      
             break;
           case SIGUSR2:
@@ -261,25 +265,23 @@ switch (num) {
      return;
 }
 }
-void myshell(char command[]){
-  if (getenv("path") == NULL) {
-    setenv("path", "/bin:/usr/bin:usr/local/bin", 1);
-    } //Set 
-    pid_t  pid;
-    pid = fork();
-      if (pid < 0){
-         printf("error");
-      }
-      else if (pid == 0){
-
-          if(execvp(command, (char*) NULL) < 0){
-            printf("There was an exec error");
-          }
-      }
-      else {
-         wait(NULL);
-      }
-
+void myshell(char *argv[]){
+    if (!getenv("PATH")){ // test to see if PATH is not null, then execute
+    setenv("PATH", "/bin:/usr/bin:/usr/local/bin", 1);
+  }
+    int pidFork = fork();
+    if (pidFork == 0){
+    execvp(argv[optind], &argv[optind]);
+    exit(0);
+    }
+    else if(pidFork < 0){
+      perror("ERROR");
+    }
+    else{
+      wait(NULL);
+      exit(0);
+    }
+        //execvp(command.cmd, command.argv);
 }
 	// Return to Caller;
 
