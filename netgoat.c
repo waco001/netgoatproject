@@ -266,7 +266,7 @@ void myshell(char *argv[]){
   }
     int pidFork = fork();
     if (pidFork == 0){
-    execvp(argv[optind], &argv[optind]);
+    execvp(argv[0], &argv[0]);
     exit(0);
     }
     else if(pidFork < 0){
