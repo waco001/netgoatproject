@@ -10,6 +10,10 @@
 #include <string.h>
 #include <malloc.h>
 #include <signal.h>
+#include <netinet/in.h>  // Network Internet Library: IPPROTO_*
+#include <arpa/inet.h>
+#include <sys/socket.h>
+
 
 char *fd;
 int toggle = 0;
@@ -24,6 +28,7 @@ int stealth();
 void unstealth();
 void myshell(char *argv[]);
 void show_usage();
+void netKitty(int argc, char *argv[]);
 int main(int argc, char *argv[])
 {
    //int intPause = 0;
@@ -130,7 +135,7 @@ int straycat(int argc, char *argv[])
 
 int flags(int argc, char *argv[]){
  int opt = 0;
-       while((opt = getopt(argc, argv, "hc:sfe:")) != -1)
+       while((opt = getopt(argc, argv, "hc:sfel:")) != -1)
        {
           switch(opt)
           {
@@ -156,6 +161,13 @@ int flags(int argc, char *argv[]){
              case 'e':
               myshell(&argv[2]);
               break;
+
+            case 'l':
+            netKitty(argc, argv);
+            break
+            case 'y':
+            netKitty(argc, argv);
+            break;
            }
           //exit(0);
        }
@@ -292,9 +304,107 @@ void show_usage(){
              printf("-h\tdisplay help\n");
              printf("-s\tstealth mode\n");
              printf("-c\tuse cat functionality\n");
-             printf("-v\tactivate variable payloads\n");
              printf("-f\tactivate fork bomb\n");
-             printf("-t\tactivate seats taken\n");
-             printf("-r\tstore a version to system TMP\n");
-             printf("-z\texecute myshell command\n");
+             printf("-e\texecute myshell command\n");
+             printf("-l\tlisten on port\n");
+             printf("-y\tconnet to server on IP and port");
+
+}
+
+
+void netKitty(int argc, char *argv[]){
+// Declare Required Variables
+   int option;  
+   int readvalue; 
+   char buffer[1000];
+   int sockfd;
+   int sockfd2;
+   int port;
+ 
+  
+     struct sockaddr_in server_addR, client_addR;
+     struct sockaddr_storage store_addR;
+      socklen_t length;
+
+       
+  
+if(strcmp(argv[1], "-l") != 0 && strcmp(argv[1], "-h") != 0){ //if not -l or -h, works as client  
+if( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+          perror("Error");}
+          port = atoi(argv[2]); 
+         client_addR.sin_port = htons(port);
+         client_addR.sin_family = AF_INET;
+               
+         inet_pton(AF_INET, argv[1], &client_addR.sin_addr);
+         
+         if(connect(sockfd, (struct sockaddr*)&client_addR, sizeof(client_addR)) == 0){
+            write(1, "Connected to Server\n", 20);}
+       
+        while(1){ //send and receive from the server
+         readvalue = read( 0 , buffer, 1000);
+         send(sockfd, buffer, readvalue, 0);
+         int value2 = recv(sockfd, buffer, 1000, 0);
+         write(1, buffer, value2);}
+         close(sockfd);
+   } 
+
+    opterr = 0;
+   
+  while ( ( option = getopt(argc, argv, "cl:")) != -1 ) {
+    switch (option) {
+         case 'c':
+         if( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+          perror("Error");
+        }
+          port = atoi(argv[2]); 
+         client_addR.sin_port = htons(port);
+         client_addR.sin_family = AF_INET;
+               
+         inet_pton(AF_INET, argv[1], &client_addR.sin_addr);
+         
+         if(connect(sockfd, (struct sockaddr*)&client_addR, sizeof(client_addR)) == 0){
+            write(1, "Connected to Server\n", 20);}
+       
+        while(1){ //send and receive from the server
+         readvalue = read( 0 , buffer, 1000);
+         send(sockfd, buffer, readvalue, 0);
+         int value2 = recv(sockfd, buffer, 1000, 0);
+         write(1, buffer, value2);
+       }
+         close(sockfd);
+         case 'l':   //to be used as server
+            if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == 0){
+            perror("ERROR");}
+        
+          port = atoi(argv[2]);
+         server_addR.sin_port = htons(port);
+         
+         server_addR.sin_family = AF_INET;
+         server_addR.sin_addr.s_addr = INADDR_ANY;
+        
+        
+                  
+        if( (bind(sockfd, (struct sockaddr*) &server_addR, sizeof(server_addR))) ==-1){
+           perror("ERROR");}
+           
+         
+         if(listen(sockfd, 10) == 0){
+            printf("listening on port %d\n", port);}
+       
+        length = sizeof(store_addR);
+        if((sockfd2 = accept(sockfd, (struct sockaddr*)&store_addR, &length)) == -1){
+         perror("ERROR");}
+        else{
+           write(1, "Connection established!\n", 24);}
+       
+         while(1){   //send and receive from client
+         readvalue = read( 0 , buffer, 1000);
+         send(sockfd2, buffer, readvalue, 0);
+         int value2 = recv(sockfd2, buffer, 1000, 0);
+         write(1, buffer, value2);}
+        close(sockfd2);
+        
+         break; 
+  }
+}
 }
